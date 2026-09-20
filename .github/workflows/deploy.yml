@@ -40,7 +40,7 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          # Rename the jar so it's always the same name for the service file
-          mv /opt/syncmaster-dilshan-drapers/*.jar /opt/syncmaster-dilshan-drapers/syncmaster.jar
+          # Rename the specific jar to the service jar to avoid mv wildcard errors
+          mv -f /opt/syncmaster-dilshan-drapers/syncmaster-0.0.1-SNAPSHOT.jar /opt/syncmaster-dilshan-drapers/syncmaster.jar
           # Restart the background service
           systemctl restart syncmaster-dilshan.service
