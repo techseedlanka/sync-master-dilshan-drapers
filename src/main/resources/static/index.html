@@ -140,7 +140,7 @@
 <div class="container py-5" style="max-width: 1100px;">
     <header class="pb-4 mb-4 d-flex justify-content-between align-items-center border-bottom border-light">
         <div class="d-flex align-items-center">
-            <img src="/logo.jpg" alt="Logo" class="logo-img">
+            <img src="logo.jpg" alt="Logo" class="logo-img">
             <div>
                 <h1 class="h4 mb-0 header-title">SyncMaster</h1>
                 <small class="text-muted" style="font-size: 0.8rem;">PayMaster Attendance Bridge</small>
@@ -316,7 +316,7 @@
 
     // --- Fetch Health Data ---
     function fetchHealth() {
-        fetch('/api/health')
+        fetch('api/health')
             .then(res => res.json())
             .then(data => {
                 const apiEl = document.getElementById('api-status');
@@ -388,7 +388,7 @@
 
     // --- Fetch Logs ---
     function fetchLogs() {
-        fetch('/api/logs')
+        fetch('api/logs')
             .then(res => res.json())
             .then(data => {
                 const container = document.getElementById('logs-container');
@@ -475,7 +475,7 @@
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Syncing...';
         btnAuth.disabled = true;
         
-        fetch(`/api/sync/force?start=${pendingSyncStart}&end=${pendingSyncEnd}&username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}`, {
+        fetch(`api/sync/force?start=${pendingSyncStart}&end=${pendingSyncEnd}&username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}`, {
             method: 'POST'
         })
         .then(async res => {
