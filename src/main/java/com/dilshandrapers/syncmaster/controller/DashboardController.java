@@ -39,7 +39,7 @@ public class DashboardController {
         health.put("lastSyncStatus", stateService.getLastSyncStatus());
         
         LocalDateTime lastSyncTime = stateService.getLastSyncTime();
-        health.put("lastSyncTime", lastSyncTime != null ? lastSyncTime.toString() : "Never");
+        health.put("lastSyncTime", lastSyncTime != null ? lastSyncTime.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME) : "Never");
         
         return ResponseEntity.ok(health);
     }
