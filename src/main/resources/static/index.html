@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SyncMaster Portal</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #635bff;
+            --primary-hover: #5851df;
+            --bg-main: #f7f9fc; 
+            --card-bg: #ffffff;
+            --text-main: #1a1f36;
+            --text-muted: #697386;
+            --border-color: #e3e8ee;
+            --success: #00d924;
+            --danger: #ff2c55;
+            --warning: #f59e0b;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+        .clean-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.04);
+            transition: box-shadow 0.2s ease;
+        }
+        .clean-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .header-title {
+            color: var(--text-main);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            margin-right: 12px;
+            object-fit: cover;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        #logs-container {
+            height: 250px;
+            overflow-y: auto;
+            background-color: #f7f9fc;
+            color: #3c4257;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            border: 1px solid var(--border-color);
+        }
+        .status-online, .status-success, .status-ok { color: var(--success) !important; }
+        .status-offline, .status-failed, .status-error { color: var(--danger) !important; }
+        .status-unknown { color: var(--text-muted) !important; }
+        
+        .btn-primary-custom {
+            background-color: var(--primary);
+            border: none;
+            color: white;
+            font-weight: 500;
+            border-radius: 6px;
+            padding: 8px 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.15s ease;
+        }
+        .btn-primary-custom:hover {
+            background-color: var(--primary-hover);
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.12);
+        }
+        .form-control {
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02) inset;
+        }
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.15);
+        }
+        .form-label {
+            color: #3c4257;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d3dce6; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #b4c2d4; }
+
+        .device-badge {
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 6px 10px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .device-badge.online { background: #e3f8e9; color: #008a17; border: 1px solid #c0e8cd; }
+        .device-badge.offline { background: #feebeb; color: #cb2431; border: 1px solid #fad2d2; }
+        .device-badge::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .device-badge.online::before { background-color: #00d924; }
+        .device-badge.offline::before { background-color: #ff2c55; }
+        
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1a1f36;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container py-5" style="max-width: 1100px;">
+    <header class="pb-4 mb-4 d-flex justify-content-between align-items-center border-bottom border-light">
+        <div class="d-flex align-items-center">
+            <img src="/logo.jpg" alt="Logo" class="logo-img">
+            <div>
+                <h1 class="h4 mb-0 header-title">SyncMaster</h1>
+                <small class="text-muted" style="font-size: 0.8rem;">PayMaster Attendance Bridge</small>
+            </div>
+        </div>
+        <div class="text-end">
+            <div id="current-time" class="fw-semibold text-main" style="font-size: 0.95rem;"></div>
+            <small class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-circle-fill text-success" style="font-size: 0.5rem; vertical-align: middle; margin-right: 4px;"></i>Real-time status</small>
+        </div>
+    </header>
+
+    <!-- Top Row: Health Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Systems Card (Combined API & DB) -->
+        <div class="col-md-4">
+            <div class="clean-card p-4 h-100 d-flex flex-column justify-content-center">
+                <h6 class="text-muted text-uppercase mb-4" style="font-size: 0.7rem; letter-spacing: 0.5px; font-weight: 600;">System Health</h6>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                    <span class="text-main fw-medium" style="font-size: 0.9rem;">API Connection</span>
+                    <span class="fw-bold" id="api-status" style="font-size: 0.9rem;">Loading...</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-main fw-medium" style="font-size: 0.9rem;">Database</span>
+                    <span class="fw-bold" id="db-status" style="font-size: 0.9rem;">Loading...</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Devices Card (Count Only) -->
+        <div class="col-md-4">
+            <div class="clean-card p-4 h-100 d-flex flex-column justify-content-center">
+                <h6 class="text-muted text-uppercase mb-3" style="font-size: 0.7rem; letter-spacing: 0.5px; font-weight: 600;">Total Devices</h6>
+                <div class="text-main fw-bold" id="device-count-top" style="font-size: 2.5rem; line-height: 1;">0</div>
+            </div>
+        </div>
+        
+        <!-- Last Sync Card -->
+        <div class="col-md-4">
+            <div class="clean-card p-4 h-100 d-flex flex-column justify-content-center">
+                <h6 class="text-muted text-uppercase mb-3" style="font-size: 0.7rem; letter-spacing: 0.5px; font-weight: 600;">Last Sync</h6>
+                <div class="text-main fw-bold" id="last-sync-time" style="font-size: 1.1rem;">Loading...</div>
+                <div id="last-sync-status" class="fw-bold mt-2" style="font-size: 0.85rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Device List Table -->
+    <div class="clean-card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="section-title mb-0"><i class="bi bi-hdd-network me-2 text-muted"></i>Device Inventory</h5>
+            <span class="badge bg-light text-secondary border border-secondary-subtle rounded-pill" id="device-count">0 Devices</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-borderless table-hover align-middle mb-0" style="font-size: 0.9rem;">
+                <thead style="border-bottom: 2px solid var(--border-color);">
+                    <tr class="text-muted">
+                        <th class="fw-semibold pb-3" style="padding-left: 0;">Name</th>
+                        <th class="fw-semibold pb-3">Serial</th>
+                        <th class="fw-semibold pb-3">Category</th>
+                        <th class="fw-semibold pb-3">Added Time</th>
+                        <th class="fw-semibold pb-3 text-end" style="padding-right: 0;">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="device-list-table">
+                    <tr><td colspan="5" class="text-center py-4 text-muted">Loading devices...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Middle Row: Force Sync Panel -->
+    <div class="clean-card p-4 mb-4">
+        <h5 class="section-title mb-4"><i class="bi bi-arrow-repeat me-2" style="color: var(--primary);"></i>Manual Override Sync</h5>
+        
+        <form id="sync-form" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="start-date" class="form-label">Start Date</label>
+                <input type="date" class="form-control" id="start-date" required>
+            </div>
+            <div class="col-md-4">
+                <label for="end-date" class="form-label">End Date</label>
+                <input type="date" class="form-control" id="end-date" required>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn-primary-custom w-100" id="sync-btn">
+                    Force Sync Now
+                </button>
+            </div>
+        </form>
+        <div id="sync-feedback" class="mt-3 p-3 rounded" style="background-color: #e3f8e9; color: #008a17; font-size: 0.9rem; font-weight: 500; display:none;"></div>
+        <div id="sync-error" class="mt-3 p-3 rounded" style="background-color: #feebeb; color: #cb2431; font-size: 0.9rem; font-weight: 500; display:none;"></div>
+    </div>
+
+    <!-- Bottom Row: Logs -->
+    <div class="clean-card p-4 mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="section-title mb-0"><i class="bi bi-terminal me-2 text-muted"></i>System Console</h5>
+            <button class="btn btn-sm btn-light" onclick="fetchLogs()" style="border: 1px solid var(--border-color); font-size: 0.8rem; font-weight: 500; background: white;">
+                <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+            </button>
+        </div>
+        <div id="logs-container">
+            <div>System ready. Waiting for logs...</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Auth Modal -->
+<div class="modal fade" id="authModal" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border: none; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title section-title"><i class="bi bi-shield-lock me-2" style="color: var(--warning);"></i>Authorization Required</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="font-size: 0.8rem;"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted mb-4" style="font-size: 0.9rem;">Manual syncing is restricted. Please enter your credentials to proceed.</p>
+        <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" class="form-control" id="auth-username" placeholder="e.g. admin">
+        </div>
+        <div class="mb-4">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-control" id="auth-email" placeholder="admin@example.com">
+        </div>
+        <div class="d-flex gap-2 pb-2">
+            <button type="button" class="btn btn-light w-50" data-bs-dismiss="modal" style="border: 1px solid var(--border-color); font-weight: 500;">Cancel</button>
+            <button type="button" class="btn-primary-custom w-50" id="auth-submit-btn">Authorize & Sync</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // --- Date Formatting Utility ---
+    function formatHumanDate(dateObj) {
+        if (!dateObj || isNaN(dateObj.getTime())) return "Never";
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const d = String(dateObj.getDate()).padStart(2, '0');
+        const m = months[dateObj.getMonth()];
+        const y = dateObj.getFullYear();
+        
+        let hours = dateObj.getHours();
+        const mins = String(dateObj.getMinutes()).padStart(2, '0');
+        const secs = String(dateObj.getSeconds()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        
+        return `${d}/${m}/${y}, ${hours}:${mins}:${secs} ${ampm}`;
+    }
+
+    // --- Time Update ---
+    setInterval(() => {
+        document.getElementById('current-time').innerText = formatHumanDate(new Date());
+    }, 1000);
+
+    // --- Format Status Colors ---
+    function formatStatus(status) {
+        if (!status) return 'status-unknown';
+        let s = status.toUpperCase();
+        if (s === 'ONLINE' || s === 'SUCCESS' || s === 'OK') return 'status-success';
+        if (s === 'OFFLINE' || s === 'FAILED' || s === 'ERROR') return 'status-failed';
+        if (s === 'IN_PROGRESS') return 'text-warning';
+        return 'status-unknown';
+    }
+
+    // --- Fetch Health Data ---
+    function fetchHealth() {
+        fetch('/api/health')
+            .then(res => res.json())
+            .then(data => {
+                const apiEl = document.getElementById('api-status');
+                apiEl.innerText = data.apiStatus;
+                apiEl.className = 'fw-bold ' + formatStatus(data.apiStatus);
+
+                const dbEl = document.getElementById('db-status');
+                dbEl.innerText = data.dbStatus;
+                dbEl.className = 'fw-bold ' + formatStatus(data.dbStatus);
+
+                // Date formatting for last sync
+                const syncDateStr = data.lastSyncTime;
+                if (syncDateStr && syncDateStr !== "Never") {
+                    document.getElementById('last-sync-time').innerText = formatHumanDate(new Date(syncDateStr));
+                } else {
+                    document.getElementById('last-sync-time').innerText = "Never";
+                }
+                
+                const syncStatusEl = document.getElementById('last-sync-status');
+                syncStatusEl.innerText = data.lastSyncStatus;
+                syncStatusEl.className = 'fw-bold mt-2 ' + formatStatus(data.lastSyncStatus);
+
+                // Devices Count
+                const totalDevs = (data.onlineDevices || 0) + (data.offlineDevices || 0);
+                document.getElementById('device-count-top').innerText = totalDevs;
+                document.getElementById('device-count').innerText = totalDevs + " Devices";
+                
+                // Devices Table
+                const tableBody = document.getElementById('device-list-table');
+                if (data.deviceList && data.deviceList.length > 0) {
+                    let html = '';
+                    data.deviceList.forEach(dev => {
+                        const cssClass = dev.status === 'ONLINE' ? 'online' : 'offline';
+                        const badgeHtml = `<span class="device-badge ${cssClass}">${dev.status}</span>`;
+                        html += `
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td class="fw-medium text-main py-3" style="padding-left: 0;">${dev.name || 'Unknown'}</td>
+                                <td class="text-muted py-3">${dev.serial || 'N/A'}</td>
+                                <td class="text-muted py-3">${dev.category || 'N/A'}</td>
+                                <td class="text-muted py-3">${dev.addTime || 'N/A'}</td>
+                                <td class="text-end py-3" style="padding-right: 0;">${badgeHtml}</td>
+                            </tr>
+                        `;
+                    });
+                    tableBody.innerHTML = html;
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No devices fetched yet.</td></tr>';
+                }
+
+                // Manage Sync Button State
+                const btn = document.getElementById('sync-btn');
+                if (data.lastSyncStatus === 'IN_PROGRESS') {
+                    btn.disabled = true;
+                    if (!btn.innerHTML.includes('spinner')) {
+                        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Syncing...';
+                    }
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Force Sync Now';
+                    if (window.fastPollInterval) {
+                        clearInterval(window.fastPollInterval);
+                        window.fastPollInterval = null;
+                        fetchLogs(); // final log fetch
+                    }
+                }
+            })
+            .catch(err => console.error('Error fetching health:', err));
+    }
+
+    // --- Fetch Logs ---
+    function fetchLogs() {
+        fetch('/api/logs')
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('logs-container');
+                container.innerHTML = '';
+                if(data.length === 0) {
+                    container.innerHTML = '<div>System ready. Waiting for logs...</div>';
+                } else {
+                    data.forEach(log => {
+                        const div = document.createElement('div');
+                        div.innerText = `> ${log}`;
+                        container.appendChild(div);
+                    });
+                }
+            })
+            .catch(err => console.error('Error fetching logs:', err));
+    }
+
+    // --- Caching Logic ---
+    function getAuthFromCache() {
+        const cache = localStorage.getItem('syncAuth');
+        if (cache) {
+            const parsed = JSON.parse(cache);
+            // Check if older than 7 days
+            if (new Date().getTime() - parsed.timestamp < 7 * 24 * 60 * 60 * 1000) {
+                return parsed;
+            }
+            localStorage.removeItem('syncAuth');
+        }
+        return null;
+    }
+
+    function setAuthToCache(username, email) {
+        localStorage.setItem('syncAuth', JSON.stringify({
+            username: username,
+            email: email,
+            timestamp: new Date().getTime()
+        }));
+    }
+
+    // --- Handle Form Submit ---
+    let pendingSyncStart = '';
+    let pendingSyncEnd = '';
+    let authModal;
+    
+    // Wait for DOM to be ready
+    document.addEventListener("DOMContentLoaded", () => {
+        authModal = new bootstrap.Modal(document.getElementById('authModal'));
+    });
+
+    document.getElementById('sync-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        pendingSyncStart = document.getElementById('start-date').value;
+        pendingSyncEnd = document.getElementById('end-date').value;
+        
+        // Hide feedbacks
+        document.getElementById('sync-feedback').style.display = 'none';
+        document.getElementById('sync-error').style.display = 'none';
+
+        const cached = getAuthFromCache();
+        if (cached) {
+            executeSync(cached.username, cached.email);
+        } else {
+            authModal.show();
+        }
+    });
+
+    document.getElementById('auth-submit-btn').addEventListener('click', function() {
+        const user = document.getElementById('auth-username').value.trim();
+        const email = document.getElementById('auth-email').value.trim();
+        if (!user || !email) {
+            alert("Username and Email are required.");
+            return;
+        }
+        executeSync(user, email);
+    });
+
+    function executeSync(username, email) {
+        const btn = document.getElementById('sync-btn');
+        const btnAuth = document.getElementById('auth-submit-btn');
+        const feedback = document.getElementById('sync-feedback');
+        const errorDiv = document.getElementById('sync-error');
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Syncing...';
+        btnAuth.disabled = true;
+        
+        fetch(`/api/sync/force?start=${pendingSyncStart}&end=${pendingSyncEnd}&username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}`, {
+            method: 'POST'
+        })
+        .then(async res => {
+            const data = await res.json();
+            if(!res.ok) {
+                throw new Error(data.error || "Sync request failed");
+            }
+            return data;
+        })
+        .then(data => {
+            // Success! Cache credentials and show feedback
+            setAuthToCache(username, email);
+            authModal.hide();
+            feedback.innerText = "Sync initiated! Check logs below for progress.";
+            feedback.style.display = 'block';
+            setTimeout(() => { feedback.style.display = 'none'; }, 5000);
+            
+            // Start polling health more frequently during a sync to watch status
+            if (!window.fastPollInterval) {
+                window.fastPollInterval = setInterval(fetchHealth, 1500);
+            }
+            fetchHealth();
+            fetchLogs(); 
+        })
+        .catch(err => {
+            authModal.hide();
+            // Clear cache if it was an auth error
+            if (err.message.includes("Unauthorized")) {
+                localStorage.removeItem('syncAuth');
+            }
+            errorDiv.innerText = err.message;
+            errorDiv.style.display = 'block';
+            
+            // If it failed to even start, reset button manually
+            btn.disabled = false;
+            btn.innerHTML = 'Force Sync Now';
+            btnAuth.disabled = false;
+        });
+    }
+
+    // --- Initialization ---
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    document.getElementById('end-date').value = today.toISOString().split('T')[0];
+    document.getElementById('start-date').value = yesterday.toISOString().split('T')[0];
+
+    fetchHealth();
+    fetchLogs();
+    setInterval(fetchHealth, 10000);
+    setInterval(fetchLogs, 10000);
+
+</script>
+</body>
+</html>

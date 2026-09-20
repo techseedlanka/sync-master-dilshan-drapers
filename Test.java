@@ -1,0 +1,2 @@
+import java.time.*; import java.time.format.*; public class Test { public static void main(String[] args) { ZonedDateTime startDateTime = LocalDate.parse(\
+2026-09-13\).atStartOfDay(ZoneId.of(\Asia/Colombo\)); ZonedDateTime endDateTime = LocalDate.parse(\2026-09-20\).atTime(23, 59, 59).atZone(ZoneId.of(\Asia/Colombo\)); DateTimeFormatter formatter = DateTimeFormatter.ofPattern(\yyyy-MM-ddTHH:mm:ssXXX\); System.out.println(startDateTime.format(formatter)); System.out.println(endDateTime.format(formatter)); } }
