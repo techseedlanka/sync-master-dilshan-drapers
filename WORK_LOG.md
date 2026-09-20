@@ -15,3 +15,4 @@
 - Implemented real-time async polling in `index.html` to keep the "Force Sync" button spinning while the backend is fetching data.
 - Added a full Developer Guide / Project Documentation to `README.md`.
 - Initialized local Git repository and committed the project codebase.
+- Fixed timezone offset issue causing Last Sync time to render 5.5 hours behind local time
