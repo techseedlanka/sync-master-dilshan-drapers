@@ -1,0 +1,46 @@
+name: Deploy to Linode
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build with Maven
+      run: mvn clean package -DskipTests
+
+    - name: Copy JAR to VPS
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        source: "target/*.jar"
+        target: "/opt/syncmaster-dilshan-drapers"
+        strip_components: 1
+
+    - name: Restart Systemd Service
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          # Rename the jar so it's always the same name for the service file
+          mv /opt/syncmaster-dilshan-drapers/*.jar /opt/syncmaster-dilshan-drapers/syncmaster.jar
+          # Restart the background service
+          systemctl restart syncmaster-dilshan.service
