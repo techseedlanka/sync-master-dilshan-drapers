@@ -1,72 +1,71 @@
 package com.dilshandrapers.syncmaster.service;
 
+import com.dilshandrapers.syncmaster.config.HikConnectProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class HikConnectAuthService {
 
     private static final Logger logger = LoggerFactory.getLogger(HikConnectAuthService.class);
 
-    @Value("${hikconnect.api.baseUrl}")
-    private String baseUrl;
-
-    @Value("${hikconnect.api.appKey}")
-    private String appKey;
-
-    @Value("${hikconnect.api.secretKey}")
-    private String secretKey;
-
+    private final HikConnectProperties properties;
     private final RestClient restClient;
 
-    private String cachedToken = null;
-    private LocalDateTime tokenExpiry = null;
+    private final Map<String, String> cachedTokens = new ConcurrentHashMap<>();
+    private final Map<String, LocalDateTime> tokenExpiries = new ConcurrentHashMap<>();
 
-    public HikConnectAuthService(RestClient hikConnectRestClient) {
+    public HikConnectAuthService(HikConnectProperties properties, RestClient hikConnectRestClient) {
+        this.properties = properties;
         this.restClient = hikConnectRestClient;
     }
 
-    public synchronized String getAccessToken() {
-        if (cachedToken != null && tokenExpiry != null && LocalDateTime.now().isBefore(tokenExpiry)) {
-            return cachedToken;
+    public synchronized String getAccessToken(HikConnectProperties.PortalConfig portal) {
+        String appKey = portal.getAppKey();
+        
+        if (cachedTokens.containsKey(appKey) && tokenExpiries.containsKey(appKey) 
+                && LocalDateTime.now().isBefore(tokenExpiries.get(appKey))) {
+            return cachedTokens.get(appKey);
         }
         
-        logger.info("Fetching new access token from Hik-Connect API");
-        return fetchNewToken();
+        logger.info("Fetching new access token for portal: {}", portal.getName());
+        return fetchNewToken(portal);
     }
 
-    private String fetchNewToken() {
-        String url = baseUrl + "/api/hccgw/platform/v1/token/get";
+    private String fetchNewToken(HikConnectProperties.PortalConfig portal) {
+        String url = properties.getApiBaseUrl() + "/api/hccgw/platform/v1/token/get";
         
         try {
             JsonNode response = restClient.post()
                     .uri(url)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of("appKey", appKey, "secretKey", secretKey))
+                    .body(Map.of("appKey", portal.getAppKey(), "secretKey", portal.getSecretKey()))
                     .retrieve()
                     .body(JsonNode.class);
 
             if (response != null && response.has("data") && response.get("data").has("accessToken")) {
-                this.cachedToken = response.get("data").get("accessToken").asText();
+                String token = response.get("data").get("accessToken").asText();
+                cachedTokens.put(portal.getAppKey(), token);
                 // Token is valid for 7 days. We cache it for 6 days to be safe.
-                this.tokenExpiry = LocalDateTime.now().plusDays(6);
-                logger.info("Successfully fetched and cached new access token");
-                return this.cachedToken;
+                tokenExpiries.put(portal.getAppKey(), LocalDateTime.now().plusDays(6));
+                
+                logger.info("Successfully fetched and cached new access token for portal: {}", portal.getName());
+                return token;
             } else {
-                logger.error("Failed to extract access token from response: {}", response);
-                throw new RuntimeException("Invalid response format from Hik-Connect auth API");
+                logger.error("Failed to extract access token from response for portal {}: {}", portal.getName(), response);
+                throw new RuntimeException("Invalid response format from Hik-Connect auth API for portal " + portal.getName());
             }
         } catch (Exception e) {
-            logger.error("Exception while fetching access token", e);
-            throw new RuntimeException("Failed to fetch access token", e);
+            logger.error("Exception while fetching access token for portal " + portal.getName(), e);
+            throw new RuntimeException("Failed to fetch access token for portal " + portal.getName(), e);
         }
     }
 }
