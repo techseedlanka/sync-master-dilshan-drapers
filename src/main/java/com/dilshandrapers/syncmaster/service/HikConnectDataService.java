@@ -87,8 +87,15 @@ public class HikConnectDataService {
                         }
 
                         if (records != null && records.isArray()) {
+                            boolean loggedSample = false;
                             for (JsonNode record : records) {
                                 try {
+                                    if (!loggedSample) {
+                                        logger.info("Sample raw record from API for portal {}: {}", portal.getName(), record.toString());
+                                        stateService.addLog("Sample raw record: " + record.toString());
+                                        loggedSample = true;
+                                    }
+                                    
                                     AttendanceLog log = mapToAttendanceLog(record, portal);
                                     if (log.getEmpId() != null && !log.getEmpId().isEmpty()) {
                                         int inserted = repository.insertIgnore(log);
@@ -267,6 +274,13 @@ public class HikConnectDataService {
             trueSerial = record.get("deviceSerial").asText();
         } else if (record.has("deviceCode") && !record.get("deviceCode").asText().isEmpty()) {
             trueSerial = record.get("deviceCode").asText();
+        } else if (record.has("cardReaderName") && !record.get("cardReaderName").asText().isEmpty()) {
+            String crName = record.get("cardReaderName").asText();
+            if (crName.contains("-")) {
+                trueSerial = crName.split("-")[0];
+            } else {
+                trueSerial = extractSerial(deviceName);
+            }
         } else {
             trueSerial = extractSerial(deviceName);
         }
