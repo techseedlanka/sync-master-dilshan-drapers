@@ -68,4 +68,10 @@ public class HikConnectAuthService {
             throw new RuntimeException("Failed to fetch access token for portal " + portal.getName(), e);
         }
     }
+
+    public void invalidateToken(HikConnectProperties.PortalConfig portal) {
+        logger.warn("Invalidating cached token for portal: {}", portal.getName());
+        cachedTokens.remove(portal.getAppKey());
+        tokenExpiries.remove(portal.getAppKey());
+    }
 }

@@ -177,6 +177,15 @@ public class HikConnectDataService {
                         .retrieve()
                         .body(JsonNode.class);
 
+                logger.info("Device Fetch Response for portal {}: {}", portal.getName(), response);
+
+                if (response != null && response.has("errorCode") && !response.get("errorCode").asText().equals("0")) {
+                    logger.warn("API Error for portal {}: {}. Invalidating token.", portal.getName(), response);
+                    authService.invalidateToken(portal);
+                    anyFailed = true;
+                    continue;
+                }
+
                 if (response != null && response.has("data") && response.get("data").has("device")) {
                     JsonNode records = response.get("data").get("device");
                     
