@@ -18,3 +18,6 @@
 - Fixed timezone offset issue causing Last Sync time to render 5.5 hours behind local time
 - Refactored Hik-Connect integration to support multiple portals via application.properties list mapping
 - Implemented Device Location Mapping via application.properties to prevent manual device name tampering
+
+## 2026-10-16
+- Filtered out failed authentication events (`swipeAuthResult != 1`, e.g. failed facial liveness or rejected credentials) in `HikConnectDataService` to prevent phantom attendance punches in MySQL.

@@ -96,6 +96,16 @@ public class HikConnectDataService {
                                         loggedSample = true;
                                     }
                                     
+                                    // Ignore failed authentications and rejected biometric attempts (1 = Success, 0 = Failed)
+                                    if (record.has("swipeAuthResult") && record.get("swipeAuthResult").asInt() != 1) {
+                                        logger.debug("Skipping failed authentication event: devSerialNo={}, personCode={}, eventType={}, swipeAuthResult={}",
+                                                record.path("devSerialNo").asText(),
+                                                record.path("personInfo").path("baseInfo").path("personCode").asText(),
+                                                record.path("eventType").asText(),
+                                                record.path("swipeAuthResult").asText());
+                                        continue;
+                                    }
+                                    
                                     AttendanceLog log = mapToAttendanceLog(record, portal);
                                     if (log.getEmpId() != null && !log.getEmpId().isEmpty()) {
                                         int inserted = repository.insertIgnore(log);
